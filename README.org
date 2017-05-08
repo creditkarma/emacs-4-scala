@@ -5,8 +5,14 @@
 #+STARTUP: content
 * Table Of Contents
 ** [[#about][About]]
-** [[#init][Init]]
-*** [[#package-manager][Package Manager]]
+** [[#emacs-config][Emacs]]
+*** [[#init][Init]]
+*** [[#version-control][Version Control]]
+*** [[#scala-programming][Scala programming]]
+*** [[#ensime][Ensime]]
+*** [[#custom][Custom]]
+** [[#sbt-config][SBT]]
+** [[#sbt-globals][Sbt Globals]]
 
     
 * About
