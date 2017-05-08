@@ -12,8 +12,8 @@
 *** [[#ensime][Ensime]]
 *** [[#custom][Custom]]
 ** [[#sbt-config][SBT]]
-** [[#sbt-globals][Sbt Globals]]
-
+*** [[#ensime][Ensime]]
+*** [[#sbt-globals][Sbt Globals]]
     
 * About
 This is a basic configuration for emacs focused on those of us who use
