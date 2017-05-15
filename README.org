@@ -5,6 +5,9 @@
 #+STARTUP: content
 * Table Of Contents
 ** [[#about][About]]
+This file produces two directories in this directory. `.emacs.d` and
+`.sbt` These have a simple emacs configuration with sbt addons to make
+ensime work. 
 ** [[#emacs-config][Emacs]]
 *** [[#init][Init]]
 *** [[#version-control][Version Control]]
@@ -65,6 +68,12 @@ Lets setup git now. Magit will install it's documentation in info mode
 so we're all good on learning how it works.
 
 #+BEGIN_SRC elisp
+(use-package with-editor
+    :pin melpa-stable)
+
+(use-package git-commit
+    :pin melpa-stable)
+
 (use-package magit
   :pin melpa-stable
   :commands magit-status magit-blame
@@ -76,7 +85,6 @@ so we're all good on learning how it works.
 
 (use-package magit-find-file)
 (use-package gh)
-(use-package magit-gh-pulls)
 (use-package github-notifier)
 (use-package git-auto-commit-mode)
 (use-package git-timemachine)
@@ -88,49 +96,199 @@ so we're all good on learning how it works.
 Lets handle scala coding right away here at the top level of our
 initialization. 
 
+#+BEGIN_SRC elisp
+  (use-package expand-region
+    :commands 'er/expand-region
+    :bind ("C-=" . er/expand-region))
+
+  (use-package counsel-projectile
+    :config
+    (counsel-projectile-on))
+
+  ;; the packages listed here before ensime aren't strictly speaking
+  ;; needing to be included manually. I've had issues in the past with
+  ;; pinning them to stable when ensime is unpinned.
+  (use-package sbt-mode
+    :pin melpa
+    :commands sbt-start sbt-command)
+
+  (use-package scala-mode
+    :pin melpa
+    :interpreter ("scala" . scala-mode))
+
+;; packages
+;; loads key-chord and adds a :chord symbol for use-package.
+  (use-package use-package-chords
+    :config (key-chord-mode 1))
+
+  ;; elisp string functions
+  (use-package s)
+  (use-package string-inflection
+    :bind ("s-i" . string-inflection-all-cycle))
+
+  ;; these next packages don't describe modes or features rather they're
+  ;; packages of elisp function designed to make coding better.  API for
+  (use-package dash)
+  (use-package dash-functional)
+  (use-package m-buffer)
+  (use-package f)
+  (use-package multiple-cursors)
+
+#+END_SRC
+
+** OMG crazy!
+
+#+BEGIN_SRC elisp
+;; stackoverflow is great but why leave emacs to search it?
+(use-package sx
+  :init (require 'bind-key)
+  :config
+  (bind-keys
+   :prefix "C-c s"
+   :prefix-map my-sx-map
+   :prefix-docstring "Global keymap for SX."
+   ("q" . sx-tab-all-questions)
+   ("i" . sx-inbox)
+   ("o" . sx-open-link)
+   ("u" . sx-tab-unanswered-my-tags)
+   ("a" . sx-ask)
+   ("s" . sx-search)))
+
+(use-package company
+  :diminish company-mode)
+
+(use-package ivy
+  :pin melpa-stable
+  :bind
+  (:map ivy-mode-map
+        ("C-'" . ivy-avy))
+  :diminish (ivy-mode . "")
+  :config
+  ;; (ivy-mode 1)
+  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
+  (setq ivy-use-virtual-buffers t)
+  ;; number of result lines to display
+  (setq ivy-height 10)
+  ;; does not count candidates
+  (setq ivy-count-format "")
+  ;; no regexp by default
+  (setq ivy-initial-inputs-alist nil)
+  ;; configure regexp engine.
+  (setq ivy-re-builders-alist
+        ;; allow input not in order
+        '((t   . ivy--regex-ignore-order))))
+
+(use-package counsel-projectile
+  :config
+  (counsel-projectile-on))
+#+END_SRC
+
 ** Ensime
 
 The defacto development environment for scala in emacs
 is ensime which relies on scala-mode and sbt-mode. 
 
-#+BEGIN_SRC elisp ;; the packages listed here before ensime aren't
-strictly speaking needing to be included manually. I've had issues in
-the past with pinning them to stable when ensime is unpinned.
-(use-package sbt-mode
-  :pin melpa
-  :commands sbt-start sbt-command)
+#+BEGIN_SRC elisp 
+  (use-package popup
+    :pin melpa-stable)
 
-(use-package scala-mode
-  :pin melpa
-  :interpreter ("scala" . scala-mode))
-
-(use-package popup
-  :pin melpa-stable)
-
-(use-package ensime
-  ;;  :pin melpa-stable
-  :init
-  (put 'ensime-auto-generate-config 'safe-local-variable #'booleanp)
-  (setq
-   ensime-startup-snapshot-notification nil
-   ensime-startup-notification nil)
-  :config
-  (require 'ensime-expand-region)
-  (add-hook 'git-timemachine-mode-hook (lambda () (ensime-mode 0))))
+  (use-package ensime
+    :pin melpa
+    :init
+    (put 'ensime-auto-generate-config 'safe-local-variable #'booleanp)
+    (setq
+      ensime-startup-snapshot-notification nil
+      ensime-startup-notification nil)
+    :config
+    (require 'ensime-expand-region)
+    (add-hook 'git-timemachine-mode-hook (lambda () (ensime-mode 0))))
 #+END_SRC
 
 ** Custom
 
-using a custom.el to hold auto-generated custom settings isn't really
-needed. it is a lot cleaner though and makes your init.el easier to
-version.
+Emacs can use a fil hold auto-generated custom settings. It's not
+required but using it means you can customize each instance of emacs
+if you want (the default) or not.
 
 #+BEGIN_SRC elisp 
-(use-package f)
-
 (setq custom-file (prog1
   (expand-file-name "custom.el" user-emacs-directory)
   (f-touch (expand-file-name "custom.el" user-emacs-directory))))
+#+END_SRC
+
+** Hooks
+
+Emacs modes almost all have hooks. These serve a bit of a different
+purpose than :init or :config in use-package
+
+#+BEGIN_SRC elisp
+(add-hook 'ensime-mode-hook
+          (lambda ()
+            (let ((backends (company-backends-for-buffer)))
+              (setq company-backends
+                    (push '(ensime-company company-yasnippet) backends)))))
+
+
+;; start code
+(defun company-backends-for-buffer ()
+  "Calculate appropriate `company-backends' for the buffer.
+For small projects, use TAGS for completions, otherwise use a
+very minimal set."
+  (projectile-visit-project-tags-table)
+  (cl-flet ((size () (buffer-size (get-file-buffer tags-file-name))))
+    (let ((base '(company-keywords company-dabbrev-code company-yasnippet)))
+      (if (and tags-file-name (<= 20000000 (size)))
+          (list (push 'company-etags base))
+        (list base)))))
+
+;; given that I have to work with eclipse users it's the only way to
+;; stay sane.
+(defun fix-format-buffer ()
+  "indent, untabify and remove trailing whitespace for a buffer"
+  (interactive)
+  (save-excursion
+    (delete-trailing-whitespace)
+    (indent-region (point-min) (point-max))
+    (untabify (point-min) (point-max))))
+
+(defun contextual-backspace ()
+  "Hungry whitespace or delete word depending on context."
+  (interactive)
+  (if (looking-back "[[:space:]\n]\\{2,\\}" (- (point) 2))
+      (while (looking-back "[[:space:]\n]" (- (point) 1))
+        (delete-char -1))
+    (cond
+     ((and (boundp 'smartparens-strict-mode)
+           smartparens-strict-mode)
+      (sp-backward-kill-word 1))
+     ((and (boundp 'subword-mode)
+           subword-mode)
+      (subword-backward-kill 1))
+     (t
+      (backward-kill-word 1)))))
+
+(global-set-key (kbd "C-<backspace>") 'contextual-backspace)
+
+(defun eshell-here()
+  "Opens up a new shell in the directory associated with the
+current buffer's file. The eshell is renamed to match that
+directory to make multiple eshell windows easier."
+  (interactive)
+  (let*((parent(if(buffer-file-name)
+                   (file-name-directory(buffer-file-name))
+                 default-directory))
+        (height(/(window-total-height) 3))
+        (name  (car(last(split-string parent "/" t)))))
+    (split-window-vertically(- height))
+    (other-window 1)
+    (eshell "new")
+    (rename-buffer(concat "*eshell: " name "*"))
+
+    (insert(concat "ls"))
+    (eshell-send-input)))
+
+(global-set-key(kbd "C-!") 'eshell-here)
+
 #+END_SRC
 
 * SBT
@@ -145,12 +303,9 @@ that is to add the plugin to all sbt projects globally. Since we're
 here lets also add some other fun (and useful) plugins.
 
 #+BEGIN_SRC scala :tangle  (prog1 ".sbt/0.13/plugins/plugins.sbt" (make-directory ".sbt/0.13/plugins" "."))
-
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.8.0")
 addSbtPlugin("com.eed3si9n" % "sbt-dirty-money" % "0.1.0")
 addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")
-addSbtPlugin("com.softwaremill.clippy" % "plugin-sbt" % "0.5.3")
-
 #+END_SRC
 
 *** Sbt Globals
