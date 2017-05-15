@@ -31,6 +31,10 @@ This begins our section on basic emacs initialization and
 configuration. The idea is that while raw emacs is a power house it
 can take a while to get up to speed with it. We're going to go through
 some basic setup with commentary so we can get to productive quickly.
+
+We start our configuration by enabling and configuring the emacs
+package manager and using it to ensure that use-package is installed. 
+
 #+BEGIN_SRC elisp
 ;; require is the equivalent of import, so we're importing emacs's
 ;; package configuration and management system
@@ -68,27 +72,32 @@ Lets setup git now. Magit will install it's documentation in info mode
 so we're all good on learning how it works.
 
 #+BEGIN_SRC elisp
-(use-package with-editor
-    :pin melpa-stable)
+  (use-package with-editor
+      :pin melpa-stable)
 
-(use-package git-commit
-    :pin melpa-stable)
+  (use-package git-commit
+      :pin melpa-stable)
 
-(use-package magit
-  :pin melpa-stable
-  :commands magit-status magit-blame
-  :init
-  (setq magit-auto-revert-mode nil)
-  (setq magit-last-seen-setup-instructions "1.4.0")
-  :bind (("s-g" . magit-status)
-         ("s-b" . magit-blame)))
+  (use-package magit
+    :pin melpa-stable
+    :commands magit-status magit-blame
+    :init
+    (setq magit-auto-revert-mode nil)
+    (setq magit-last-seen-setup-instructions "1.4.0")
+    :bind (("s-g" . magit-status)
+           ("s-b" . magit-blame)))
 
-(use-package magit-find-file)
-(use-package gh)
-(use-package github-notifier)
-(use-package git-auto-commit-mode)
-(use-package git-timemachine)
+  (use-package magithub
+    :after magit
+    :config (magithub-feature-autoinject t))
 
+  (use-package magit-find-file
+    ;; s-f is the key ⌘ + f (so cmd-f)
+    :bind (("s-f" . magit-find-file-completing-read)))
+
+  ;; invoke M-x git-timemachine in a git versioned file to enable moving
+  ;; through version space.
+  (use-package git-timemachine)
 #+END_SRC
 
 ** Scala programming
@@ -202,6 +211,33 @@ is ensime which relies on scala-mode and sbt-mode.
     :config
     (require 'ensime-expand-region)
     (add-hook 'git-timemachine-mode-hook (lambda () (ensime-mode 0))))
+#+END_SRC
+
+** JS
+
+So both SBT and emacs are quite happy in the javascript soup. 
+
+#+BEGIN_SRC elisp
+  ;; rjsx mode brings js-mode with it and ads the ability to format jsx
+  ;; files as well as stright javascript
+  (use-package rjsx-mode)
+  (use-package js2-refactor)
+  (use-package js2-mode
+    :init (add-hook 'js2-mode-hook #'(js2-refactor-mode)))
+#+END_SRC
+
+** PHP
+
+
+Blech, but it's a thing we need so...
+
+#+BEGIN_SRC elisp
+  (use-package composer)
+  (use-package php-mode)
+  ;; turn this back on when it works again
+  ;; (use-package php+-mode)
+  (use-package phpunit)
+  (use-package psysh)
 #+END_SRC
 
 ** Custom
