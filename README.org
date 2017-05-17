@@ -19,12 +19,29 @@ ensime work.
 *** [[#sbt-globals][Sbt Globals]]
     
 * About
-This is a basic configuration for emacs focused on those of us who use
-scala primarily.
+
+This file itself isn't the config, it's a literate version of the
+config. In order to generate the code version use M-x org-babel-tangle
+or C-c C-v t while in this buffer. Tangling this will produce to
+subdirectories, .sbt and .emacs.d, with a complete generated start
+point. Simply moving both directories to your home directory (i.e. mv
+./.sbt ~/.sbt && mv ./.emacs.d ~/.emacs.d ) will get you
+bootstrapped. 
 
 * Emacs
 
 #+PROPERTY: header-args:elisp :tangle (prog1 ".emacs.d/init.el" (make-directory ".emacs.d" ".")) :results silent
+As it says on the tin 
+
+#+BEGIN_QUOTE :tangle no
+Emacs is the extensible, customizable, self-documenting real-time
+display editor.
+#+END_QUOTE
+
+That flexibility give great power but also makes getting started
+difficult. This is a basic configuration focused on making a workable
+starting evironment for programmers working in a mixed Scala and PHP
+environment with git as the version control system. 
 
 ** Init
 This begins our section on basic emacs initialization and
@@ -326,6 +343,20 @@ directory to make multiple eshell windows easier."
 (global-set-key(kbd "C-!") 'eshell-here)
 
 #+END_SRC
+
+** Themes
+
+Just because emacs is a tool for coding doesn't mean you can't have
+fun with it. Maybe you don't like black text on white. Lets add a
+theme and a game.
+
+#+BEGIN_SRC elisp
+(use-package cyberpunk-theme)
+
+(use-package 2048-game)
+#+END_SRC
+
+Good luck figuring out how to use them!
 
 * SBT
 
