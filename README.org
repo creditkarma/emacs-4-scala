@@ -83,6 +83,26 @@ package manager and using it to ensure that use-package is installed.
   (package-install 'use-package))
 #+END_SRC
 
+** Making Emacs more friendly
+The one real issue with emacs is that the key bindings that are the
+defaults only made sense back when you interacted with it via a real
+serial tty device. In those days succinctness was a virtue and the
+number of key bindings was limited. Today neither of those constraints
+exist but history has cemented bindings. ErgoEamcs is a site run by a
+emacs user who has spent the time and effort in redesigning
+keybindings to be ergonometric as possible. see [[https://ergoemacs.github.io/][Ergoemacs-mode]] for
+more information
+
+#+BEGIN_SRC elisp
+(use-package ergoemacs-mode
+  :pin melpa-stable
+  :init
+  (setq ergoemacs-theme nil)              ;use default bindings theme
+  (setq ergoemacs-keyboard-layout "us")     ;assume us querty keyboard
+  :config
+  (ergoemacs-mode 1))
+#+END_SRC
+
 ** Version Control
 
 Lets setup git now. Magit will install it's documentation in info mode
@@ -219,7 +239,7 @@ is ensime which relies on scala-mode and sbt-mode.
     :pin melpa-stable)
 
   (use-package ensime
-    :pin melpa
+    :pin melpa-stable
     :init
     (put 'ensime-auto-generate-config 'safe-local-variable #'booleanp)
     (setq
@@ -243,7 +263,7 @@ So both SBT and emacs are quite happy in the javascript soup.
     :init (add-hook 'js2-mode-hook #'(js2-refactor-mode)))
 #+END_SRC
 
-** PHP
+** PHP`
 
 
 Blech, but it's a thing we need so...
@@ -381,13 +401,12 @@ addSbtPlugin("org.ensime" % "sbt-ensime" % "1.12.11")
 import org.ensime.EnsimeKeys._
 import org.ensime.EnsimeCoursierKeys._
 
-// this loads the current development version of ensime, which is the
-// one you want. really, it is so don't worry about it.
-ensimeServerVersion in ThisBuild := "2.0.0-SNAPSHOT"
-
 // if this isn't set then ensime will create 2.11 and 2.12 specific
 // directories for you in your tree :(
 ensimeIgnoreMissingDirectories in ThisBuild := true
+
+// allow C-c to interrupt the running app NOT kill sbt
+cancelable in Global := true
 #+END_SRC
 
 
